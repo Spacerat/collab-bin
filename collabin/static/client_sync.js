@@ -21,7 +21,7 @@ Synchroniser = function(url, getFunc, setFunc) {
 
     /* Add a callback function to the Synchroniser
     */
-    this.addCallback(name, func) {
+    this.addCallback = function(name, func) {
         if (!(name in callbacks)) {
             callbacks[name] = Array();
         }
@@ -31,7 +31,7 @@ Synchroniser = function(url, getFunc, setFunc) {
     /* runCallback(name, arg1, arg2...)
         Run said callback with given arguments.
     */
-    this.runCallback(name) {
+    var runCallback = function(name) {
         if (name in callbacks) {
             return;
         }
@@ -83,6 +83,10 @@ Synchroniser = function(url, getFunc, setFunc) {
         return v = slice1 + write.text + slice2;
     }
     
+    socket.on('connect', function() {
+        this.runCallback('connect');
+    });    
+    
     // Recieved data from the server
     socket.on('message', function(data) {
     
@@ -97,9 +101,10 @@ Synchroniser = function(url, getFunc, setFunc) {
             else if (write.id = last_sent.id) {
                 //If this IS the feedback from our previous send:
                 //Apply all updates since the last known synchronised state.
-                var s = last_state;
+                var s = last_state, n = data.write, u;
                 for (var i in inbox_queue) {
-                    s = t.applyWrite(s, inbox_queue[i]);
+                    u = inbox_queue[i];
+                    s = t.applyWrite(s, u);
                 }
                 s = t.applyWrite(s, write);
                 setFunc(s);
@@ -113,3 +118,4 @@ Synchroniser = function(url, getFunc, setFunc) {
     });
     
 }
+
