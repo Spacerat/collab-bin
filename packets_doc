@@ -1,0 +1,40 @@
+
+This file documents the different possible packets sent by node server/clients.
+
+
+----------------
+ Django -> Node
+----------------
+
+handshake: {                    Response from a request to validate a user-sent token.
+    status: bool                True if accepted, false if rejected.
+    
+    details: {                  If accepted, some details:
+        userid: string,         Client's userId.
+        name: string,           Client's name.
+        avatar_url: string      URL to the client's avatar.    
+    }
+}
+
+
+----------------
+ Node -> Client
+----------------
+
+reject_token                Token is invalid. Client should disconnect.
+
+
+reject_join: {              Join request rejected.
+    reason: string          The reason for rejection.
+    room_url: string        URL of the room the client has been rejected from.
+}
+
+
+----------------
+ Client -> Node
+----------------
+
+connect: {                  Initiate the handshake procedure
+    token: string           A randomised token sent to the client by the web server, which the client then sends to node.
+}
+
