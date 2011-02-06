@@ -10,7 +10,7 @@ This file documents the different possible packets sent by node server/clients.
 handshake: {                    Response from a request to validate a user-sent token.
     status: bool                True if accepted, false if rejected.
     
-    <details>: {                  If accepted, some details:
+    <details>: {                If accepted, some details:
         userid: string,         Client's userId.
         name: string,           Client's name.
         avatar_url: string      URL to the client's avatar.    
@@ -22,16 +22,34 @@ handshake: {                    Response from a request to validate a user-sent 
  Node -> Client
 ----------------
 
-accept_token: true          Token has been accepted. The client should now wait for room acceptence.
+accept_token: true          Your token has been accepted. You should now wait for room acceptence.
 
-
-reject: {                   Connection request rejected. Client should disconnect.
-    reason: string          The reason for rejection.
-    <room_url>: string      URL of the room the client has been rejected from.
+accept_join: {              You have been accepted in to the room.
+    can_write: bool         Your write permission in this room.
 }
 
+reject: {                   Connection request rejected. You should disconnect.
+    reason: string          The reason for rejection.
+    <room_url>: string      URL of the room you have been rejected from.
+}
 
-accept_join: true           Client has been accepted in to the room.
+new_applicant: {            A client has made an application to join your room.
+    details {
+        userid: string,
+        name: string,
+        avatar_url: string
+    }
+}
+
+new_member: {               A new client has joined your room.
+    details: {
+        userid: string,
+        name: string,
+        avatar_url: string
+    },
+    can_write: bool
+}
+
 
 
 ----------------
