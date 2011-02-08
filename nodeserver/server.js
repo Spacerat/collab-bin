@@ -12,8 +12,8 @@ var Room = function(settings) {
     var text;
     var url;
     
-    var members = Array();
-    var applicants = Array();
+    var members = [];
+    var applicants = [];
     
     var max_members = settings.max_members | 10;
     var anyone_write = settings.require_write_auth | false;
@@ -23,31 +23,31 @@ var Room = function(settings) {
     // Return the number of places left in the room.
     this.getRemainingSpace = function() {
         return max_members - members.length;
-    }
+    };
     
     //Add a member to this room.
     this.addMember = function(client) {
         var i;
-        if (getRemainingSpace === 0) {
+        if (this.getRemainingSpace === 0) {
             client.Disconnect("Room has no free spaces",this);
             return;
         }
         //Broadcast info about this new member.
-        new Packet().newMember(client).broadcastToRoom(socket, room);
-        new Packet().acceptJoin(anyone_write).Send(client)
+        new Packet().newMember(client).broadcastToRoom(client.listener, this);
+        new Packet().acceptJoin(anyone_write).Send(client);
         
         //Remove the member from the applicants list
         if ((i = members.indexOf(client))>=-1) {
             applicants = applicants.slice(0, i).concat(applicants.slice(i + 1));
         }
-    }
+    };
     
     //Add an applicant to this room.
     this.addApplicant = function(client) {
-        new Packet().newApplicant(client).broadcastToRoom(socket, room);
+        new Packet().newApplicant(client).broadcastToRoom(client.listener, this);
         applicants.push(client);
-    }
-}
+    };
+};
 
 
 
@@ -58,9 +58,9 @@ this.Server = function(app) {
     var rooms = {};
     
     //Verify a token.
-    var verify_token(token, onreply) {
+    var verify_token = function(token, onreply) {
     //TODO: Impliment this.
-    }
+    };
     
     socket.on('connection', function(client) {
     
@@ -70,28 +70,29 @@ this.Server = function(app) {
             }
             client.connected = false;
             client.on('message',undefined); //no clue if this works.
-        }
+        };
         
         //Inline Client class!
-        client.collab = new (function(){
-            this.verified = false;
-            this.room: null;
-            this.details {
+        client.collab = {
+            verified: false,
+            room: null,
+            details: {
                 userid: "",
                 name: "",
                 avatar_url: ""
-            }
-            this.can_write = false;
-        })();
+            },
+            can_write: false
+        };
         
         client.on('message', function(data) {
-            if (!client.connected) return;
-            
+            if (!client.connected) {
+                return;
+            }
             //Client has initiated the handshake procedure
             //TODO: mechanism for creating rooms.
             if ('connect' in data) {
                 var room;
-                if (client.verified == true) {
+                if (client.verified === true) {
                     client.Disconnect("Illegal attempt to handshake twice.");
                     return;
                 }
@@ -106,7 +107,7 @@ this.Server = function(app) {
                 else {
                     room = rooms[data.connect.room];
                 }
-                if (room.getRemainingSpace==0) {
+                if (room.getRemainingSpace === 0) {
                     client.Disconnect("Room has no free spaces.", room);
                 }
                 //If the token is valid, update the client's details and attempt to join the room.
@@ -115,7 +116,7 @@ this.Server = function(app) {
                         client.collab.details = response.details;
                         
                         new Packet().acceptToken().Send(client);
-                        if (room.anyone_join===true) {
+                        if (room.anyone_join === true) {
                             room.addMember(client);
                         }
                         else {
@@ -133,5 +134,5 @@ this.Server = function(app) {
             
         });
     });
-}
+};
 
