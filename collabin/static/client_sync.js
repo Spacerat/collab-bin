@@ -4,17 +4,17 @@ Create a Synchroniser, connecting to a node server at the given URL.
 Must be supplied with getFunc() - to get the value of whatever is being synchronised,
 And setFunc(string), to set it.
 */
-Synchroniser = function(url, getFunc, setFunc) {
+var Synchroniser = function (url, getFunc, setFunc) {
     var t = this;
     
     var last_applied, //The last command sent by the server which has been applied.
         last_sent,    //The last command sent to the server
         last_state,   //The last known synchronised state
-        outbox_queue = Array(), //A queue of commands to send
-        inbox_queue = Array(),  //A buffer of commands to apply once confirmation of the last sent command is recieved
+        outbox_queue = [], //A queue of commands to send
+        inbox_queue = [],  //A buffer of commands to apply once confirmation of the last sent command is recieved
         write_count = 0,        //Number of commands this client has written
         
-        callbacks = {}
+        callbacks = {};
         
         socket = new io.Socket(url);
         
@@ -23,10 +23,10 @@ Synchroniser = function(url, getFunc, setFunc) {
     */
     this.addCallback = function(name, func) {
         if (!(name in callbacks)) {
-            callbacks[name] = Array();
+            callbacks[name] = [];
         }
         callbacks[name].push(func);
-    }
+    };
     
     /* runCallback(name, arg1, arg2...)
         Run said callback with given arguments.
@@ -37,7 +37,7 @@ Synchroniser = function(url, getFunc, setFunc) {
         }
         var args = arguments.slice(1);
         callbacks[name].apply(this, args);  
-    }
+    };
 
     /* Input commands to synchronise.
         pos (int)         : position to start the command.
@@ -48,11 +48,11 @@ Synchroniser = function(url, getFunc, setFunc) {
     this.Write = function(pos, newtext, deletetext) {
         
         command = {
-            id: socket.sessionId+''+write_count,
+            id: (socket.sessionId)+'-'+write_count,
             pos: pos,
             text: newtext,
             del: deletetext
-        }
+        };
         write_count += 1;
         if (last_sent) {
             outbox_queue.push(command);
@@ -62,7 +62,7 @@ Synchroniser = function(url, getFunc, setFunc) {
             //The last known synchronised state is the current one.
             last_state = getFunc();
         }
-    }
+    };
     
     /* Send a command to the server.
     */
@@ -72,16 +72,16 @@ Synchroniser = function(url, getFunc, setFunc) {
         
         last_sent = command;
         socket.send({'write':command});
-    }
+    };
     
-    /* Return value that v becomes after being transformed by 'write'
+    /* Return value that text becomes after being transformed by 'write'
     */
-    this.applyWrite(text, write) {
+    this.applyWrite = function(text, write) {
         
         var slice1 = text.slice(0, write.pos);
         var slice2 = text.slice(write.pos + write.del.length + write.text.length);
-        return v = slice1 + write.text + slice2;
-    }
+        return slice1 + write.text + slice2;
+    };
     
     socket.on('connect', function() {
         this.runCallback('connect');
@@ -93,16 +93,16 @@ Synchroniser = function(url, getFunc, setFunc) {
         if ('write' in data) {
             var write = data.write;
             
-            if (!last sent) {
+            if (!last_sent) {
                 //If we are not waiting for feedback from a previous send:
                 //Directly apply the update - there will be no conflict.
                 setFunc(t.applyWrite(last_state, write));
             }
-            else if (write.id = last_sent.id) {
+            else if (write.id === last_sent.id) {
                 //If this IS the feedback from our previous send:
                 //Apply all updates since the last known synchronised state.
-                var s = last_state, n = data.write, u;
-                for (var i in inbox_queue) {
+                var s = last_state, n = data.write, u, i;
+                for (i = 0; i>inbox_queue.length; i++) {
                     u = inbox_queue[i];
                     s = t.applyWrite(s, u);
                 }
@@ -117,5 +117,5 @@ Synchroniser = function(url, getFunc, setFunc) {
         }
     });
     
-}
+};
 

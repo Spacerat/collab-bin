@@ -10,24 +10,25 @@ Editor = function(id, url) {
     //Start the synchroniser.
     this.connect = function() {
         sync = new Synchroniser(url, this.getValue, this.setValue);
-    }    
+    };
     
     //Get the editor's text
     this.getValue = function() {
         return textarea.value;
-    }
+    };
     
     //Set the editor's text
     this.setValue = function() {
         textarea.value = value;
-    }
+    };
 
     //Send typing data    
     textarea.onkeyup = function(argument) {
         var startchange = -1;
         var pos = textarea.selectionStart;
+        var c;
         
-        for (var c in textarea.value) {
+        for (c in textarea.value) {
             if (textarea.value[c] !== prevtext[c]) {
                 startchange = parseInt(c,10);
                 break;
@@ -37,7 +38,9 @@ Editor = function(id, url) {
             if (s.length<prevtext.length) {
                 startchange=s.length;
             }
-            else return;
+            else {
+                return;
+            }
         }
         
         var str = textarea.value.slice(startchange, pos);
@@ -45,7 +48,7 @@ Editor = function(id, url) {
         
         sync.Write(startchange, str, del);
         prevtext = textbox.value;
-    }
-}
+    };
+};
 
 
